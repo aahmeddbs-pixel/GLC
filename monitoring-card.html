@@ -187,9 +187,9 @@ footer a{color:var(--grey);cursor:pointer;text-decoration:underline}
   <h1>Secondary Progress Monitoring<small>Daily lesson card — Ready · Responsible · Respectful</small></h1>
   <div class="info">
    <div><label>Name</label><input type="text" data-i="name"></div>
-   <div><label>Class</label><input type="text" data-i="cls"></div>
+   <div><label>Class</label><select data-i="cls"><option value="">— Select class —</option><option>10Z1</option><option>10Z2</option><option>10B1</option><option>10B2</option><option>10L1</option><option>10L2</option><option>10G1</option><option>10G2</option></select></div>
    <div><label>Date issued</label><input type="date" data-i="issued"></div>
-   <div><label>Issued by</label><input type="text" data-i="by"></div>
+   <div><label>Issued by</label><select data-i="by"><option value="">— Select —</option><option>Mr. Ahmed</option></select></div>
    <div><label>Week commencing</label><input type="date" data-i="week"></div>
    <div><label>Duration</label><select id="dur"><option value="1">1 week</option><option value="2">2 weeks</option><option value="3">3 weeks</option><option value="4">4 weeks</option></select></div>
   </div>
@@ -252,7 +252,7 @@ footer a{color:var(--grey);cursor:pointer;text-decoration:underline}
 </details>
 
 <div class="weeks" id="weeks"></div>
-<p class="hint adm noprint" id="wkhint" style="display:none">Teachers can only open weeks marked <b>Open</b> and days that are not closed. Tap <b>Open / Closed</b> next to a week, or <b>Close this day / Open this day</b> on a day tab, to change this. SISD holidays are closed automatically.</p>
+<p class="hint adm noprint" id="wkhint" style="display:none">Teachers can only open weeks marked <b>Open</b> and days that are not closed. Tap <b>Open / Closed</b> next to any week (several can be closed at once, or use <b>Open all / Close all weeks</b>), or <b>Close this day / Open this day</b> on a day tab, to change this. SISD holidays are closed automatically.</p>
 <div class="wknote" id="wknote"></div>
 <nav class="tabs" id="tabs"></nav>
 <div id="panels"></div>
@@ -343,7 +343,7 @@ function load(obj){
  if(!S.set.friEnd)S.set.friEnd=S.ends['4'];
  delete S.days;
  S.dayOff=S.dayOff||{};
- if(!S.enabled||!Object.keys(S.enabled).some(function(k){return S.enabled[k]})){S.enabled={};S.enabled[S.active||1]=true;}
+ if(!S.enabled){S.enabled={};S.enabled[S.active||1]=true;}
  if(S.pinV!==PW_VER||!S.pin){S.pin=hash(DEF_PW);S.pinV=PW_VER;}
 }
 /* Browser storage can be blocked (e.g. OneDrive's preview window). Never let that stop the card. */
@@ -477,6 +477,7 @@ function applyMode(){
  var t=teacherMode();
  document.body.classList.toggle('teacher',t);
  document.querySelectorAll('.info input').forEach(function(el){el.readOnly=t;});
+ document.querySelectorAll('.info select[data-i]').forEach(function(el){el.disabled=t;});
  document.getElementById('dur').disabled=t;
  document.getElementById('previewBar').style.display=preview?'flex':'none';
  document.querySelector('.tonly-link').style.display=!glc?'':'none';
@@ -497,7 +498,7 @@ function todayTab(){var w=W(),d=new Date().getDay(),t=d>=1&&d<=5?d-1:0;
 
 /* ---------- fill values ---------- */
 function hydrate(){
- document.querySelectorAll('[data-i]').forEach(function(el){el.value=S.info[el.dataset.i]||'';});
+ document.querySelectorAll('[data-i]').forEach(function(el){var v=S.info[el.dataset.i]||'';if(el.tagName==='SELECT'&&v&&![].some.call(el.options,function(o){return o.value===v})){var o=document.createElement('option');o.textContent=v;el.appendChild(o);}el.value=v;});
  document.getElementById('dur').value=S.dur||1;
  document.querySelectorAll('[data-time]').forEach(function(el){el.value=S.times[el.dataset.time]||'';});
  document.querySelectorAll('[data-end]').forEach(function(el){el.value=S.ends[el.dataset.end]||'';});
@@ -515,11 +516,12 @@ function hydrate(){
 function showWeek(){
  var w=W(),n=+S.dur||1,h='';
  var tm=teacherMode();
- if(n>1)for(var i=1;i<=n;i++){
+ if(n>1||!tm)for(var i=1;i<=n;i++){
   var op=wkOpen(i),lbl='Week '+i+' · '+short(weekStart(i));
   if(tm){h+='<button class="wk'+(i===w?' on':'')+(op?'':' off')+'" data-wk="'+i+'"'+(op?'':' disabled')+'>'+lbl+(op?'':' 🔒')+'</button>';}
   else{h+='<span class="wkgrp"><button class="wk'+(i===w?' on':'')+'" data-wk="'+i+'">'+lbl+'</button><button class="vis '+(op?'open':'shut')+'" data-vis="'+i+'" title="Tap to '+(op?'close':'open')+' this week for teachers">'+(op?'Open':'Closed')+'</button></span>';}
  }
+ if(!tm&&n>1)h+='<span style="flex-basis:100%;height:0"></span><button class="vis open" data-allwk="1">Open all weeks</button><button class="vis shut" data-allwk="0">Close all weeks</button>';
  document.getElementById('weeks').innerHTML=h;
  document.getElementById('wkhint').style.display=(!tm)?'':'none';
  var note=document.getElementById('wknote'),calW=(function(){var t=new Date();t.setHours(0,0,0,0);return Math.floor((t-baseMonday())/(7*864e5))+1;})();
@@ -767,7 +769,7 @@ document.addEventListener('input',handle);document.addEventListener('change',han
 function handle(e){
  var el=e.target,w=W();
  if(el.dataset.i!==undefined){if(teacherMode())return;S.info[el.dataset.i]=el.value;if(el.dataset.i==='week'){S.wk=curWeek();showWeek();}mailStatus();}
- else if(el.id==='dur'){if(teacherMode())return;S.dur=+el.value||1;if(S.active>S.dur)S.active=S.dur;if(S.wk>S.dur)S.wk=S.dur;Object.keys(S.enabled).forEach(function(k){if(+k>S.dur)delete S.enabled[k];});if(!openWeeks().length)S.enabled[1]=true;showWeek();}
+ else if(el.id==='dur'){if(teacherMode())return;S.dur=+el.value||1;if(S.active>S.dur)S.active=S.dur;if(S.wk>S.dur)S.wk=S.dur;Object.keys(S.enabled).forEach(function(k){if(+k>S.dur)delete S.enabled[k];});showWeek();}
  else if(el.id==='pin'){if(e.type!=='change')return;var v=el.value.trim();if(v.length<4){alert('The password must be at least 4 characters.');return;}S.pin=hash(v);S.pinV=PW_VER;el.value='';document.getElementById('pinHint').textContent='Password changed ✓ — teacher cards you create from now on will use it.';}
  else if(el.dataset.r!==undefined){rev(w)[el.dataset.r]=el.value;}
  else if(el.dataset.tt){S.tt[el.dataset.tt]=el.value;if(e.type==='change')renderEmails();document.querySelectorAll('.pcard').forEach(function(c){refreshCard(c.dataset.k)});}
@@ -789,7 +791,8 @@ document.addEventListener('click',function(e){
  if(b.dataset.tab){showTab(b.dataset.tab);save();return;}
  if(b.dataset.copy!==undefined){var m=ATT[b.dataset.copy];var txt=m.body;(navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(function(){b.textContent='Copied ✓';},function(){prompt('Copy this message:',txt);});return;}
  if(b.dataset.wk){var wn=+b.dataset.wk;if(teacherMode()&&!wkOpen(wn))return;S.wk=wn;showWeek();save();return;}
- if(b.dataset.vis){if(teacherMode())return;var a=+b.dataset.vis;S.enabled[a]=!S.enabled[a];if(!openWeeks().length){S.enabled[a]=true;alert('At least one week must stay open for teachers.');}S.wk=a;showWeek();save();return;}
+ if(b.dataset.vis){if(teacherMode())return;var a=+b.dataset.vis;S.enabled[a]=!S.enabled[a];S.wk=a;showWeek();save();return;}
+ if(b.dataset.allwk!==undefined){if(teacherMode())return;var on=b.dataset.allwk==='1';for(var q=1;q<=(+S.dur||1);q++)S.enabled[q]=on;showWeek();save();return;}
  if(b.dataset.daytog){if(teacherMode())return;var di=dayIdx(b.dataset.daytog),k=dkey(W(),di),now=dayClosed(W(),di);S.dayOff[k]=!now;showWeek();save();return;}
  var pc=b.closest('.pcard');
  if(pc&&!canEdit(W(),dayIdx(pc.dataset.k.split('-')[0])))return;
