@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Progress Monitoring Card</title>
+<style>
+:root{--navy:#1B2D4E;--red:#DC2B3E;--maroon:#8E1B2E;--grey:#6b7280;--line:#d6dbe4;--bg:#f4f6fa;--ok:#1f8a4c;--okbg:#e3f5ea;--no:#c62836;--nobg:#fde6e8;--warn:#b45309;--warnbg:#fff3dc}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:#1d2433;font-size:15px}
+.wrap{max-width:1180px;margin:0 auto;padding:16px}
+body.teacher .adm{display:none!important}
+body:not(.teacher) .tonly{display:none!important}
+.modebar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--navy);color:#fff;border-radius:10px;padding:8px 14px;margin-bottom:10px;font-size:14px}
+.modebar b{letter-spacing:.03em}
+.modebar button{background:#fff;color:var(--navy);border:0;border-radius:6px;padding:6px 10px;font:inherit;font-weight:bold;cursor:pointer}
+header.top{background:#fff;border-top:6px solid var(--red);border-radius:12px;padding:18px;display:flex;gap:18px;align-items:center;flex-wrap:wrap;box-shadow:0 1px 3px rgba(0,0,0,.06);position:relative}
+header.top svg{flex:0 0 auto}
+header.top h1{margin:0;color:var(--maroon);font-size:26px;line-height:1.15;padding-right:120px}
+header.top h1 small{display:block;font-size:15px;color:var(--navy);font-weight:normal;margin-top:4px}
+.savebadge{position:absolute;top:14px;right:16px;font-size:13px;font-weight:bold;padding:5px 11px;border-radius:20px;background:var(--okbg);color:var(--ok);white-space:nowrap}
+.savebadge.busy{background:var(--warnbg);color:var(--warn)}
+.savebadge.err{background:var(--nobg);color:var(--no)}
+.nosave{display:none;background:var(--nobg);color:var(--no);border:2px solid var(--no);border-radius:10px;padding:12px 14px;margin-bottom:10px;font-size:14px;line-height:1.5}
+.nosave.on{display:block}
+.info{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
+.info label,.fld label{font-size:12px;font-weight:bold;color:var(--navy);text-transform:uppercase;letter-spacing:.03em;display:block;margin-bottom:3px}
+input[type=text],input[type=date],input[type=time],input[type=number],input[type=password],select,textarea{width:100%;padding:8px 9px;border:1px solid var(--line);border-radius:7px;font:inherit;background:#fff;color:inherit}
+body.teacher .info input,body.teacher .info select{background:#f5f7fb;border-color:#f5f7fb;color:var(--navy);font-weight:bold;opacity:1;-webkit-text-fill-color:var(--navy)}
+textarea{min-height:80px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--red);outline-offset:0;border-color:transparent}
+.card{background:#fff;border-radius:12px;padding:16px;margin-top:14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card h2{margin:0 0 10px;font-size:18px;color:var(--maroon)}
+details.card summary{cursor:pointer;font-weight:bold;color:var(--maroon);font-size:17px}
+.targets-def{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:12px 0}
+.tdef{border-left:4px solid var(--red);background:#fbf3f4;padding:9px 11px;border-radius:6px}
+.tdef b{color:var(--red)}
+.instr{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.instr h3{margin:4px 0;color:var(--maroon);font-size:15px}
+.instr ul{margin:0;padding-left:18px;line-height:1.45}
+.times{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.times .pair{display:flex;gap:4px;align-items:center;font-size:12px;color:var(--grey)}
+.hint{font-size:13px;color:var(--grey);margin:6px 0 0}
+.setgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:12px}
+.blk{display:flex;align-items:center;gap:6px;font-size:14px}
+.blk input{width:62px!important}
+table.tt{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+table.tt th,table.tt td{border:1px solid var(--line);padding:4px;text-align:center}
+table.tt th{background:var(--navy);color:#fff}
+table.tt td.p{font-weight:bold;color:var(--maroon);background:#faf3f4;width:46px}
+table.tt td.na{background:#eceef2}
+table.tt .sub{font-size:11px;color:var(--grey);margin-top:2px}
+table.tt td.nm{text-align:left;font-weight:bold;color:var(--navy);width:220px}
+h3.tth{margin:14px 0 4px;color:var(--maroon);font-size:15px}
+table.tt input{padding:6px;font-size:13px;border-radius:5px}
+.weeks{display:flex;gap:6px;flex-wrap:wrap;margin-top:16px}
+.wk{border:1px solid var(--navy);background:#fff;color:var(--navy);padding:8px 14px;border-radius:20px;font:inherit;font-weight:bold;cursor:pointer;font-size:14px}
+.wk.off{border-style:dashed;color:var(--grey);border-color:#b8bfcc}
+.wk.act{background:var(--ok);border-color:var(--ok);color:#fff}
+.wknote{display:none;margin-top:12px;padding:10px 12px;border-radius:8px;background:var(--warnbg);color:var(--warn);font-weight:bold;font-size:14px}
+.wk.on{background:var(--maroon);border-color:var(--maroon);color:#fff}
+.wk:disabled{cursor:not-allowed;opacity:.55;background:#eef0f4}
+.wkgrp{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:24px;padding:3px;background:#fff}
+.wkgrp .wk{border-width:1px}
+.vis{border:0;border-radius:16px;padding:6px 10px;font:inherit;font-size:12px;font-weight:bold;cursor:pointer}
+.vis.open{background:var(--okbg);color:var(--ok)}.vis.shut{background:var(--nobg);color:var(--no)}
+.tab.off{background:#eef0f4;color:#9aa1ad;text-decoration:line-through}
+.tab:disabled{cursor:not-allowed}
+.closedmsg{display:none;margin:0 0 12px;padding:12px;border-radius:8px;background:#eef0f4;color:var(--grey);font-weight:bold}
+.panel.closed .closedmsg{display:block}
+body.teacher .panel.closed .grid{display:none}
+.panel.closed .grid{opacity:.5}
+.dayhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.dayhead h2.dayh{margin:0}
+.pwbg{display:none;position:fixed;inset:0;background:rgba(27,45,78,.55);z-index:50;align-items:center;justify-content:center;padding:16px}
+.pwbg.on{display:flex}
+.pwbox{background:#fff;border-radius:12px;border-top:6px solid var(--red);padding:20px;width:100%;max-width:360px}
+.pwbox h3{margin:0 0 10px;color:var(--maroon)}
+.pwerr{color:var(--no);font-size:13px;font-weight:bold;min-height:18px;margin-top:6px}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin-top:12px;padding-bottom:2px}
+.tab{border:0;background:#e3e7ef;color:var(--navy);padding:10px 16px;border-radius:9px 9px 0 0;font:inherit;font-weight:bold;cursor:pointer;white-space:nowrap}
+.tab.on{background:var(--navy);color:#fff}
+.tab .mini{font-weight:normal;font-size:12px;opacity:.85;margin-left:6px}
+.panel{display:none;background:#fff;border-radius:0 12px 12px 12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.panel.on{display:block}
+.panel h2.dayh{margin:0 0 12px;color:var(--maroon);font-size:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.pcard{border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff}
+.pcard.all{border-color:var(--ok);box-shadow:inset 4px 0 0 var(--ok)}
+.pcard.miss{border-color:var(--no);box-shadow:inset 4px 0 0 var(--no)}
+.phead{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.phead b{color:var(--maroon);font-size:16px}
+.phead .tnm{color:var(--navy);font-weight:bold}
+.pteach{font-size:12px;color:var(--grey);margin-bottom:6px;min-height:14px}
+.chip{flex:0 0 auto;white-space:nowrap;font-size:12px;padding:3px 8px;border-radius:20px;background:#eef0f4;color:var(--grey)}
+.chip.ok{background:var(--okbg);color:var(--ok)}.chip.no{background:var(--nobg);color:var(--no)}
+.row{display:flex;align-items:center;gap:6px;margin:6px 0;flex-wrap:wrap}
+.row>span.lbl{font-size:13px;font-weight:bold;color:var(--navy);min-width:62px}
+.row input[type=time]{width:auto;flex:1 1 100px;min-width:96px}
+.row input[type=text]{flex:1}
+.now{border:1px solid var(--navy);background:#fff;color:var(--navy);border-radius:6px;padding:7px 9px;font:inherit;font-size:13px;cursor:pointer}
+.now:hover{background:var(--navy);color:#fff}
+.tag{font-size:12px;font-weight:bold;padding:3px 8px;border-radius:20px}
+.tag.ok{background:var(--okbg);color:var(--ok)}.tag.late{background:var(--nobg);color:var(--no)}.tag.info{background:var(--warnbg);color:var(--warn)}
+.trow{display:flex;align-items:center;gap:6px;margin:5px 0}
+.trow .tname{flex:1;font-size:14px}
+.trow .tname b{color:var(--red)}
+.tb{width:40px;height:34px;border-radius:7px;border:1px solid var(--line);background:#fff;font-size:17px;cursor:pointer;color:#9aa1ad}
+.tb.ok.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.tb.no.on{background:var(--no);border-color:var(--no);color:#fff}
+.toil{display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px 10px;border-radius:8px;background:#f2f4f8;cursor:pointer;font-weight:bold;color:var(--navy);font-size:14px}
+.toil input{width:20px;height:20px;accent-color:var(--red);margin:0}
+.tdet{display:none;background:var(--warnbg);border-radius:8px;padding:6px 10px;margin-top:6px}
+.tdet.on{display:block}
+.dayalert{display:none;margin-top:14px;padding:10px 12px;border-radius:8px;background:var(--warnbg);color:var(--warn);font-weight:bold;font-size:14px}
+.dayalert.on{display:block}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{background:#f5f7fb;border-radius:10px;padding:12px;text-align:center}
+.stat .n{font-size:26px;font-weight:bold;color:var(--navy)}
+.stat .l{font-size:12px;color:var(--grey);text-transform:uppercase;letter-spacing:.03em}
+.stat.good .n{color:var(--ok)}.stat.bad .n{color:var(--no)}
+.bars{margin-top:14px}
+.bar{display:flex;align-items:center;gap:10px;margin:7px 0;font-size:14px}
+.bar .bn{width:130px}
+.bar .bt{flex:1;height:14px;background:#e9ecf2;border-radius:7px;overflow:hidden}
+.bar .bf{height:100%;background:var(--red);width:0}
+.bar .bp{width:48px;text-align:right;font-weight:bold}
+.expect{margin-top:12px;padding:12px;border-radius:10px;font-weight:bold;text-align:center}
+.expect.ok{background:var(--okbg);color:var(--ok)}.expect.no{background:var(--nobg);color:var(--no)}
+table.ov{width:100%;border-collapse:collapse;font-size:14px}
+table.ov th,table.ov td{border:1px solid var(--line);padding:7px;text-align:center}
+table.ov th{background:var(--navy);color:#fff}
+table.ov td.p{font-weight:bold;color:var(--maroon);background:#faf3f4}
+table.ov td.na{background:#eceef2;color:#9aa1ad}
+td.c3{background:var(--okbg)}td.cx{background:var(--nobg)}
+.ovwrap{overflow-x:auto}
+.revgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.suggest{font-size:13px;margin-top:6px;color:var(--navy)}
+.suggest b.ok{color:var(--ok)}.suggest b.no{color:var(--no)}
+.att{border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:8px;padding:10px 12px;margin-top:10px}
+.att ul{margin:6px 0 0;padding-left:18px;font-size:14px;line-height:1.5}
+.att .why{color:var(--no);font-weight:bold}
+.toil-att{border-left-color:var(--red)}
+.okmsg{color:var(--ok);font-weight:bold;margin:8px 0 0}
+a.btn{text-decoration:none;display:inline-block}
+.mailstat{margin-top:12px;padding:10px 12px;border-radius:8px;background:#f2f4f8;font-size:13px;color:var(--navy);line-height:1.5}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn{border:0;border-radius:8px;padding:10px 14px;font:inherit;font-weight:bold;cursor:pointer;background:var(--navy);color:#fff}
+.btn.red{background:var(--red)}.btn.ghost{background:#fff;color:var(--navy);border:1px solid var(--navy)}
+.btn.big{font-size:16px;padding:12px 18px}
+footer{font-size:12px;color:var(--grey);text-align:center;margin:18px 0 8px}
+footer a{color:var(--grey);cursor:pointer;text-decoration:underline}
+#mailFrame{display:none}
+@media (max-width:560px){.wrap{padding:10px}header.top h1{font-size:21px;padding-right:0;margin-top:22px}.bar .bn{width:95px}}
+@media print{
+ @page{size:A4 landscape;margin:10mm}
+ body{background:#fff;font-size:11px}
+ .tabs,.actions,.now,.noprint,.mailstat,.modebar,.savebadge,.weeks,.daytog,.pwbg{display:none!important}
+ .panel.closed{display:none!important}
+ .panel{display:block!important;box-shadow:none;border:1px solid var(--line);border-radius:8px;page-break-before:always}
+ .card,header.top{box-shadow:none;border:1px solid var(--line)}
+ details.card{display:block}
+ .grid{grid-template-columns:repeat(4,1fr);gap:6px}
+ .pcard{padding:6px;page-break-inside:avoid}
+ .tdet{display:block}.tdet:not(.on){display:none}
+ input,select,textarea{border:0;border-bottom:1px solid #999;border-radius:0;padding:2px}
+ *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body class="teacher">
+<div class="wrap">
+
+<div class="modebar adm noprint"><span><b>GLC VIEW</b> — <span id="modeTxt">master card</span></span><span><button id="previewBtn">Preview teacher view</button> <button id="lockBtn" class="tonly-glc">Lock (back to teacher view)</button></span></div>
+<div class="modebar noprint" id="previewBar" style="display:none;background:var(--maroon)"><span><b>PREVIEW</b> — this is what teachers see</span><button id="backBtn">Back to GLC view</button></div>
+
+<div class="nosave noprint" id="nosave"><b>⚠ This card cannot save here.</b> It is open inside the OneDrive preview, which blocks saving. Anything entered now will be lost when the page closes.<br>Please open the file directly in the browser instead: in OneDrive, tap <b>⋯ → Download</b> (or <b>Open → Open in browser</b>), then open the downloaded file in Chrome, Edge or Safari.</div>
+<header class="top">
+ <span class="savebadge" id="savebadge">Saved ✓</span>
+ <svg width="78" height="78" viewBox="0 0 100 100" aria-hidden="true">
+  <g fill="none" stroke-width="6">
+   <circle cx="28" cy="40" r="20" stroke="#DC2B3E"/><circle cx="50" cy="26" r="20" stroke="#DC2B3E"/>
+   <circle cx="72" cy="40" r="20" stroke="#DC2B3E"/><circle cx="50" cy="66" r="20" stroke="#8a8f99"/>
+  </g>
+ </svg>
+ <div style="flex:1;min-width:220px">
+  <h1>Secondary Progress Monitoring<small>Daily lesson card — Ready · Responsible · Respectful</small></h1>
+  <div class="info">
+   <div><label>Name</label><input type="text" data-i="name"></div>
+   <div><label>Class</label><input type="text" data-i="cls"></div>
+   <div><label>Date issued</label><input type="date" data-i="issued"></div>
+   <div><label>Issued by</label><input type="text" data-i="by"></div>
+   <div><label>Week commencing</label><input type="date" data-i="week"></div>
+   <div><label>Duration</label><select id="dur"><option value="1">1 week</option><option value="2">2 weeks</option><option value="3">3 weeks</option><option value="4">4 weeks</option></select></div>
+  </div>
+ </div>
+</header>
+
+<details class="card">
+ <summary>Student targets &amp; instructions</summary>
+ <div class="targets-def">
+  <div class="tdef"><b>1. READY</b> — Arrive to all lessons on time with the correct equipment.</div>
+  <div class="tdef"><b>2. RESPONSIBLE</b> — Engaged in learning with all tasks completed.</div>
+  <div class="tdef"><b>3. RESPECTFUL</b> — Respectful communication to teachers and peers and not disturbing the learning.</div>
+ </div>
+ <div class="instr">
+  <div><h3>Instructions to students</h3><ul>
+   <li>This progress monitoring card is your responsibility.</li>
+   <li>This card <b>must</b> be handed to each subject teacher at the beginning of each lesson and collected at the end.</li>
+   <li>Your target is <b>30 or more</b> lessons each week with all three targets met.</li>
+   <li>Bring the card to homeroom every morning (7:50–8:10).</li>
+   <li>Your Grade Coordinator reviews the card at the end of each week.</li></ul></div>
+  <div><h3>Instructions to teachers</h3><ul>
+   <li>Ensure the student gives you their card at the beginning of each lesson and return it at the end.</li>
+   <li>Open today's tab and find your period. Homeroom teachers complete the <b>Homeroom</b> box (7:50–8:10) at the top of each day.</li>
+   <li>Record the arrival time (tap <b>Now</b>).</li>
+   <li>Mark each target achieved with ✓ and not achieved with ✗, then add your initials.</li>
+   <li>If the student leaves for the toilet, tick <b>Toilet visit</b> and record the time out and back in.</li>
+   <li>Everything saves automatically — look for <b>Saved ✓</b> at the top.</li></ul></div>
+ </div>
+</details>
+
+<details class="card adm" id="setupBox">
+ <summary>Card setup — GLC only</summary>
+ <div class="setgrid">
+  <div class="fld"><label>GLC password (needed to switch to the GLC view)</label><input type="password" id="pin" placeholder="Type a new password to change it" autocomplete="new-password"><p class="hint" id="pinHint"></p></div>
+ </div>
+ <div class="setgrid">
+  <div class="fld"><label>Timetable</label><select id="ttMode"><option value="same">Same every week</option><option value="AB">Two-week rota (Week A / Week B)</option></select></div>
+  <div class="fld" id="firstWkWrap"><label>Week commencing date is</label><select id="firstWk"><option value="A">Week A</option><option value="B">Week B</option></select><p class="hint">Weeks then alternate A, B, A, B…</p></div>
+ </div>
+ <p class="hint" style="margin-top:12px"><b>Timetable</b> — the teacher (and subject) for each lesson. Teachers see this on the card, and the GLC “Needs attention” panel names the teacher of any lesson left unfilled.</p>
+ <div id="ttWrap"></div>
+ <p class="hint" style="margin-top:14px"><b>Teacher emails (optional)</b> — used only for the <b>Email</b> buttons in the GLC “Needs attention” panel, which open a reminder in your own email for you to check and send. Nothing is emailed automatically.</p>
+ <div class="ovwrap"><table class="tt" id="emTable" style="max-width:640px"></table></div>
+ <div class="actions" id="createWrap">
+  <button class="btn red big" id="createBtn">Create teacher card</button>
+ </div>
+ <p class="hint" id="createHint">Fill in the details at the top, then tap <b>Create teacher card</b>. It downloads a teacher version of this card for this student — upload that file to OneDrive and share its link with the student and teachers.</p>
+</details>
+
+<details class="card adm noprint">
+ <summary>Settings — lesson times &amp; toilet alerts</summary>
+ <div class="times" id="times" style="margin-top:12px"></div>
+ <div class="setgrid">
+  <div class="fld"><label>Grace period for lateness (mins)</label><input type="number" min="0" max="30" id="grace"></div>
+  <div class="fld"><label>Friday period 4 ends at</label><input type="time" id="friEnd"><p class="hint">End of the Friday school day.</p></div>
+  <div class="fld"><label>Toilet alert — block 1</label><div class="blk">Periods <input type="number" min="1" max="7" id="b1a"> to <input type="number" min="1" max="7" id="b1b"></div></div>
+  <div class="fld"><label>Toilet alert — block 2</label><div class="blk">Periods <input type="number" min="1" max="7" id="b2a"> to <input type="number" min="1" max="7" id="b2b"></div></div>
+ </div>
+ <p class="hint">Start and end times are set to the SISD bell times. A lesson shows in “Needs attention” 5 minutes after it ends if it hasn't been filled in. Every arrival is marked “On time” or “Late +X min”. A toilet flag is shown if the student goes to the toilet more than once within the same block on the same day.</p>
+</details>
+
+<div class="weeks" id="weeks"></div>
+<p class="hint adm noprint" id="wkhint" style="display:none">Teachers can only open weeks marked <b>Open</b> and days that are not closed. Tap <b>Open / Closed</b> next to a week, or <b>Close this day / Open this day</b> on a day tab, to change this. SISD holidays are closed automatically.</p>
+<div class="wknote" id="wknote"></div>
+<nav class="tabs" id="tabs"></nav>
+<div id="panels"></div>
+
+<section class="card adm noprint">
+ <h2 id="attTitle">Needs attention</h2>
+ <p class="hint" style="margin-top:-4px">Lessons not filled in 5 minutes after they ended, and toilet flags. Nothing is sent automatically — use <b>Email</b> to open a reminder in your own email, or <b>Copy</b> to paste it into Teams or Outlook.</p>
+ <div id="attn"></div>
+</section>
+
+<section class="card adm" id="review">
+ <h2 id="revTitle">GLC Lesson Review</h2>
+ <div class="stats" id="stats"></div>
+ <div class="bars" id="bars"></div>
+ <div class="expect" id="expect"></div>
+</section>
+
+<section class="card adm">
+ <h2 id="coTitle">Grade Coordinator review</h2>
+ <div class="revgrid">
+  <div class="fld"><label>Outcome</label>
+   <select data-r="decision">
+    <option value="">— Select outcome —</option>
+    <option>Target met</option>
+    <option>Target not met</option>
+    <option>Target met — come off monitoring card</option>
+    <option>Target not met — continue card for another week</option>
+    <option>Target not met — parent meeting to be arranged</option>
+    <option>Target not met — escalate to behaviour contract</option>
+    <option>Other (see comment)</option>
+   </select>
+   <div class="suggest" id="suggest"></div>
+  </div>
+  <div class="fld"><label>Grade Coordinator</label><input type="text" data-r="by" placeholder="Name"></div>
+  <div class="fld"><label>Date reviewed</label><input type="date" data-r="date"></div>
+ </div>
+ <div class="fld" style="margin-top:12px"><label>Comment</label><textarea data-r="comment" placeholder="Grade Coordinator comment"></textarea></div>
+ <div class="actions">
+  <button class="btn" id="printBtn">Print / Save as PDF</button>
+  <button class="btn ghost" id="snapBtn">Download snapshot</button>
+  <button class="btn ghost" id="saveBtn">Download backup</button>
+  <button class="btn ghost" id="loadBtn">Load backup</button>
+  <button class="btn red" id="clearBtn">Start new card</button>
+  <input type="file" id="fileIn" accept=".json" hidden>
+ </div>
+ <p class="hint">Every change saves instantly in this browser on this device. Use <b>Download backup</b> to move the card to another device.</p>
+</section>
+
+<div class="pwbg" id="pwbg"><div class="pwbox"><h3>GLC view</h3><label style="font-size:12px;font-weight:bold;color:var(--navy)">Password</label><input type="password" id="pwIn" autocomplete="off"><div class="pwerr" id="pwErr"></div><div class="actions"><button class="btn" id="pwOk">Open GLC view</button><button class="btn ghost" id="pwCancel">Cancel</button></div></div></div>
+<footer>Swiss International Scientific School Dubai · Secondary Progress Monitoring<span class="tonly-link"> · <a id="glcLink">GLC view</a></span></footer>
+</div>
+
+<script>
+(function(){
+/* ===== CONFIG ===== */
+var TARGET=30;
+var REMIND_MIN=5;                                 /* a lesson shows as 'not filled in' this many minutes after it ends */
+var SIGN='Abdul';                                 /* sign-off on reminder messages */
+/* No data leaves this device: nothing is emailed or uploaded automatically. */
+var DEF_START={'0':'07:50','1':'08:10','2':'09:00','3':'10:15','4':'11:10','5':'12:05','6':'13:40','7':'14:35'};
+var DEF_END={'0':'08:10','1':'09:00','2':'09:50','3':'11:10','4':'12:05','5':'13:00','6':'14:35','7':'15:30'};                                    /* lessons per week with all 3 targets met */
+var DEF_PW='siSd123';                             /* GLC password (change it in Card setup) */
+var PW_VER=2;
+/* SISD 2026-27 non-school days (Eid dates tentative). The GLC can open or close any day. */
+var SCHOOL_OFF=(function(){var o={},r=[['2026-10-12','2026-10-16'],['2026-12-02','2026-12-04'],['2026-12-14','2027-01-01'],['2027-01-07','2027-01-07'],['2027-03-08','2027-03-12'],['2027-04-05','2027-04-09'],['2027-05-17','2027-05-18'],['2027-06-16','2027-06-16'],['2027-07-03','2027-08-31']];
+ r.forEach(function(x){var a=x[0].split('-'),b=x[1].split('-'),d=new Date(+a[0],+a[1]-1,+a[2]),e=new Date(+b[0],+b[1]-1,+b[2]);while(d<=e){o[d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)]=1;d.setDate(d.getDate()+1);}});return o;})();
+var PRESET=/*@@PRESET@@*/null;                    /* filled in automatically on teacher cards */
+
+var SOURCE='<!DOCTYPE html>\n'+document.documentElement.outerHTML;  /* pristine copy for "Create teacher card" */
+var DAYS=[['Mon','Monday',7],['Tue','Tuesday',7],['Wed','Wednesday',7],['Thu','Thursday',7],['Fri','Friday',4]];
+var TN=['<b>T1</b> Ready','<b>T2</b> Responsible','<b>T3</b> Respectful'];
+var TFULL=['Ready','Responsible','Respectful'];
+var IS_TEACHER_CARD=!!PRESET;
+var KEY=IS_TEACHER_CARD?'sisd_pmc_'+PRESET.id:'sisd_progress_card_v1';
+var TOTAL=DAYS.reduce(function(a,d){return a+d[2]},0);  /* lessons in a full week */
+var S;
+function blank(){return {info:{},dur:1,times:{},grace:0,set:{friEnd:'',dayEnd:'',b1:[1,3],b2:[4,6]},tt:{},pin:'',pinV:0,enabled:{1:true},dayOff:{},active:1,ends:{},subj:{},temail:{},ttMode:'same',firstWk:'A',cells:{},review:{},sent:{},alerts:{},missing:{},tab:'Mon',wk:0}}
+function load(obj){
+ var b=blank();obj=obj||{};S=Object.assign(b,obj);
+ S.set=Object.assign(blank().set,obj.set||{});
+ ['tt','review','sent','alerts','missing','cells','info','times','ends','subj','temail'].forEach(function(k){S[k]=S[k]||{};});
+ /* migrate older single-week cards */
+ Object.keys(S.cells).forEach(function(k){if(!/^w\d/.test(k)){S.cells['w1-'+k]=S.cells[k];delete S.cells[k];}});
+ if(S.review.decision!==undefined||S.review.comment!==undefined){S.review={1:S.review};}
+ Object.keys(S.sent).forEach(function(k){if(!/^w\d$/.test(k)){S.sent.w1=S.sent[k];delete S.sent[k];}});
+ S.active=Math.max(1,+S.active||1);
+ Object.keys(DEF_START).forEach(function(k){if(!S.times[k])S.times[k]=DEF_START[k];if(!S.ends[k])S.ends[k]=DEF_END[k];});
+ if(!S.set.friEnd)S.set.friEnd=S.ends['4'];
+ delete S.days;
+ S.dayOff=S.dayOff||{};
+ if(!S.enabled||!Object.keys(S.enabled).some(function(k){return S.enabled[k]})){S.enabled={};S.enabled[S.active||1]=true;}
+ if(S.pinV!==PW_VER||!S.pin){S.pin=hash(DEF_PW);S.pinV=PW_VER;}
+}
+/* Browser storage can be blocked (e.g. OneDrive's preview window). Never let that stop the card. */
+var CAN_SAVE=(function(){try{var t='__pmc_t';localStorage.setItem(t,'1');localStorage.removeItem(t);return true;}catch(e){return false;}})();
+var MEM_SS={};
+function ssGet(k){try{return sessionStorage.getItem(k);}catch(e){return MEM_SS[k]||null;}}
+function ssSet(k,v){try{sessionStorage.setItem(k,v);}catch(e){MEM_SS[k]=v;}}
+function ssDel(k){try{sessionStorage.removeItem(k);}catch(e){delete MEM_SS[k];}}
+try{var raw=CAN_SAVE?localStorage.getItem(KEY):null;load(raw?JSON.parse(raw):PRESET?JSON.parse(JSON.stringify(PRESET.data)):null);}catch(e){load(PRESET?PRESET.data:null);}
+
+var glc=ssGet('glc_'+KEY)==='1';   /* always opens in teacher view; GLC view needs the password */
+var preview=false;
+function teacherMode(){return !glc||preview;}
+
+function PL(p){return +p===0?'Homeroom':'P'+p;}
+function W(){return S.wk||curWeek();}
+function wkOpen(w){return !!S.enabled[w];}
+function openWeeks(){var n=+S.dur||1,o=[];for(var i=1;i<=n;i++)if(wkOpen(i))o.push(i);return o;}
+function teacherWeek(){var c=curWeek(),o=openWeeks();if(wkOpen(c))return c;if(!o.length)return c;var b=o.filter(function(x){return x<=c});return b.length?b[b.length-1]:o[0];}
+function dkey(w,i){return ymd(dayDate(w,i));}
+function dayClosed(w,i){var k=dkey(w,i);if(S.dayOff.hasOwnProperty(k))return !!S.dayOff[k];return !!SCHOOL_OFF[k];}
+function canEdit(w,i){if(!teacherMode())return true;return wkOpen(w)&&!dayClosed(w,i);}
+function dayIdx(day){for(var i=0;i<DAYS.length;i++)if(DAYS[i][0]===day)return i;return 0;}
+function cell(k){return S.cells[k]||(S.cells[k]={t:[0,0,0],init:'',arr:'',toilet:false,out:'',back:''});}
+function ck(w,day,p){return 'w'+w+'-'+day+'-'+p;}
+function rev(w){return S.review[w]||(S.review[w]={});}
+function mins(t){if(!t)return null;var p=String(t).split(':');return (+p[0])*60+(+p[1]);}
+function pad(n){return ('0'+n).slice(-2);}
+function nowStr(){var d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes());}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function hash(s){var h=5381;s=String(s);for(var i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))>>>0;return 'h'+h.toString(36);}
+
+/* ---------- auto-save with Saving… / Saved ✓ ---------- */
+var saveT;
+function badge(cls,txt){var b=document.getElementById('savebadge');b.className='savebadge '+(cls||'');b.textContent=txt;}
+function writeNow(){
+ if(!CAN_SAVE){badge('err','⚠ Not saving');return;}
+ try{localStorage.setItem(KEY,JSON.stringify(S));badge('','Saved ✓ '+nowStr());}
+ catch(e){badge('err','Not saved — ask the GLC');}
+}
+function save(){clearTimeout(saveT);writeNow();}   /* saves the moment anything is typed, ticked or tapped */
+window.addEventListener('pagehide',writeNow);
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')writeNow();});
+
+/* ---------- dates ---------- */
+function ymd(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function baseMonday(){
+ if(S.info.week){var p=S.info.week.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
+ var d=new Date();d.setHours(0,0,0,0);var dow=d.getDay();d.setDate(d.getDate()+(dow===0?-6:1-dow));return d;
+}
+function weekStart(w){var d=baseMonday();d.setDate(d.getDate()+7*(w-1));return d;}
+function dayDate(w,i){var d=weekStart(w);d.setDate(d.getDate()+i);return d;}
+function curWeek(){var t=new Date();t.setHours(0,0,0,0);var n=Math.floor((t-baseMonday())/(7*864e5))+1;return Math.max(1,Math.min(+S.dur||1,n));}
+function fmtDate(d){return d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});}
+function short(d){return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});}
+function friDeadline(w){
+ var d=dayDate(w,4),t=mins(S.set.friEnd);
+ if(t===null){t=mins(S.ends['4']);if(t===null)t=13*60;}
+ d.setHours(Math.floor(t/60),t%60,0,0);return d;
+}
+function dayEndTime(w,i){
+ if(i===4)return friDeadline(w);
+ var d=dayDate(w,i),t=mins(S.ends['7']);
+ if(t===null)t=15*60+30;
+ d.setHours(Math.floor(t/60),t%60,0,0);return d;
+}
+
+function lessonEnd(w,i,p){
+ var d=dayDate(w,i),t=mins(S.ends[String(p)]);
+ if(t===null){var nx=mins(S.times[String(+p+1)]),st=mins(S.times[String(p)]);t=nx!==null&&+p<DAYS[i][2]?nx:(st!==null?st+50:null);}
+ if(t===null)return null;
+ d.setHours(Math.floor(t/60),t%60,0,0);return d;
+}
+/* ---------- timetable ---------- */
+function wkType(w){if(S.ttMode!=='AB')return '';var f=S.firstWk==='B'?'B':'A';return ((w-1)%2===0)?f:(f==='A'?'B':'A');}
+function ttKey(w,day,p){var t=wkType(w);return (t?t+'-':'')+day+'-'+p;}
+function teacherFor(w,day,p){return S.tt[ttKey(w,day,p)]||'';}
+function subjFor(w,day,p){return S.subj[ttKey(w,day,p)]||'';}
+function renderTT(){
+ var sets=S.ttMode==='AB'?[['A-','Week A'],['B-','Week B']]:[['','']],h='';
+ sets.forEach(function(st){
+  if(st[1])h+='<h3 class="tth">'+st[1]+'</h3>';
+  h+='<div class="ovwrap"><table class="tt"><tr><th>Period</th>'+DAYS.map(function(d){return '<th>'+d[1]+'</th>'}).join('')+'</tr>';
+  for(var p=0;p<=7;p++){h+='<tr><td class="p">'+(p?'P'+p:'HR')+'</td>';DAYS.forEach(function(d){var k=st[0]+d[0]+'-'+p;h+=p>d[2]?'<td class="na"></td>':'<td><input type="text" data-tt="'+k+'" value="'+esc(S.tt[k]||'')+'" placeholder="'+(p?'Teacher':'Homeroom teacher')+'">'+(S.subj[k]?'<div class="sub">'+esc(S.subj[k])+'</div>':'')+'</td>';});h+='</tr>';}
+  h+='</table></div>';
+ });
+ document.getElementById('ttWrap').innerHTML=h;
+ document.getElementById('firstWkWrap').style.display=S.ttMode==='AB'?'':'none';
+ renderEmails();
+}
+function teacherNames(){var seen={};Object.keys(S.tt).forEach(function(k){var t=(S.tt[k]||'').trim();var pre=S.ttMode==='AB'?/^[AB]-/.test(k):!/^[AB]-/.test(k);if(t&&pre)seen[t]=1;});return Object.keys(seen).sort();}
+function renderEmails(){
+ var n=teacherNames(),h='<tr><th>Teacher</th><th>Email</th></tr>';
+ if(!n.length)h+='<tr><td colspan="2" style="color:var(--grey)">Add teachers to the timetable first.</td></tr>';
+ n.forEach(function(t){h+='<tr><td class="nm">'+esc(t)+'</td><td><input type="text" data-em="'+esc(t)+'" value="'+esc(S.temail[t]||'')+'" placeholder="name@sisd.ae"></td></tr>';});
+ document.getElementById('emTable').innerHTML=h;
+}
+/* ---------- build ---------- */
+function build(){
+ var tm='';for(var p=0;p<=7;p++)tm+='<div class="fld"><label>'+(p?'Period '+p:'Homeroom')+'</label><div class="pair"><input type="time" data-time="'+p+'" title="starts">to<input type="time" data-end="'+p+'" title="ends"></div></div>';
+ document.getElementById('times').innerHTML=tm;
+ var tabs='',panels='';
+ DAYS.forEach(function(d){
+  tabs+='<button class="tab" data-tab="'+d[0]+'">'+d[1]+'<span class="mini" id="mini-'+d[0]+'"></span></button>';
+  var g='';
+  for(var p=0;p<=d[2];p++){
+   var k=d[0]+'-'+p;
+   var tr='';for(var i=0;i<3;i++)tr+='<div class="trow"><span class="tname">'+TN[i]+'</span><button class="tb ok" data-t="'+i+'" data-v="1" aria-label="'+TFULL[i]+' met">✓</button><button class="tb no" data-t="'+i+'" data-v="-1" aria-label="'+TFULL[i]+' not met">✗</button></div>';
+   g+='<div class="pcard" data-k="'+k+'">'+
+    '<div class="phead"><b>'+(p?'Period '+p:'Homeroom')+'<span class="tnm" id="tn-'+k+'"></span></b><span class="chip" id="chip-'+k+'">Not marked</span></div>'+
+    '<div class="pteach" id="pt-'+k+'"></div>'+
+    '<div class="row"><span class="lbl">Arrival</span><input type="time" data-f="arr"><button class="now" data-now="arr">Now</button><span id="late-'+k+'"></span></div>'+
+    tr+
+    '<div class="row"><span class="lbl">Initials</span><input type="text" maxlength="6" data-f="init" placeholder="Teacher initials"></div>'+
+    '<label class="toil"><input type="checkbox" data-f="toilet"> Toilet visit</label>'+
+    '<div class="tdet" id="tdet-'+k+'">'+
+     '<div class="row"><span class="lbl">Time out</span><input type="time" data-f="out"><button class="now" data-now="out">Now</button></div>'+
+     '<div class="row"><span class="lbl">Back in</span><input type="time" data-f="back"><button class="now" data-now="back">Now</button><span id="dur-'+k+'"></span></div>'+
+    '</div></div>';
+  }
+  panels+='<section class="panel" data-panel="'+d[0]+'"><div class="dayhead"><h2 class="dayh" id="dh-'+d[0]+'">'+d[1]+'</h2><button class="btn ghost adm daytog" data-daytog="'+d[0]+'"></button></div><div class="closedmsg" id="cm-'+d[0]+'"></div><div class="grid">'+g+'</div><div class="dayalert" id="alert-'+d[0]+'"></div></section>';
+ });
+ tabs+='<button class="tab adm" data-tab="ov">Week overview</button>';
+ panels+='<section class="panel adm" data-panel="ov"><h2 class="dayh" id="ovh">Week overview</h2><div class="ovwrap"><table class="ov" id="ovt"></table></div><p class="hint">Each cell shows targets met out of 3. ⏰ = late arrival · 🚻 = toilet visit (minutes out).</p></section>';
+ document.getElementById('tabs').innerHTML=tabs;
+ document.getElementById('panels').innerHTML=panels;
+}
+
+/* ---------- mode ---------- */
+function applyMode(){
+ var t=teacherMode();
+ document.body.classList.toggle('teacher',t);
+ document.querySelectorAll('.info input').forEach(function(el){el.readOnly=t;});
+ document.getElementById('dur').disabled=t;
+ document.getElementById('previewBar').style.display=preview?'flex':'none';
+ document.querySelector('.tonly-link').style.display=!glc?'':'none';
+ document.getElementById('lockBtn').style.display='';
+ document.getElementById('createWrap').style.display=IS_TEACHER_CARD?'none':'';
+ document.getElementById('createHint').style.display=IS_TEACHER_CARD?'none':'';
+ document.getElementById('modeTxt').textContent=IS_TEACHER_CARD?'teacher card for '+(S.info.name||'student'):'master card (keep this file private)';
+ if(t&&S.tab==='ov')S.tab=todayTab();
+ if(t&&!wkOpen(W()))S.wk=teacherWeek();
+ if(t){var ti=dayIdx(S.tab);if(S.tab!=='ov'&&dayClosed(W(),ti))S.tab=todayTab();}
+ showTab(S.tab);
+ if(document.querySelector('.pcard'))showWeek();
+}
+function todayTab(){var w=W(),d=new Date().getDay(),t=d>=1&&d<=5?d-1:0;
+ if(!dayClosed(w,t))return DAYS[t][0];
+ for(var i=0;i<DAYS.length;i++)if(!dayClosed(w,i))return DAYS[i][0];
+ return DAYS[t][0];}
+
+/* ---------- fill values ---------- */
+function hydrate(){
+ document.querySelectorAll('[data-i]').forEach(function(el){el.value=S.info[el.dataset.i]||'';});
+ document.getElementById('dur').value=S.dur||1;
+ document.querySelectorAll('[data-time]').forEach(function(el){el.value=S.times[el.dataset.time]||'';});
+ document.querySelectorAll('[data-end]').forEach(function(el){el.value=S.ends[el.dataset.end]||'';});
+ document.getElementById('ttMode').value=S.ttMode||'same';document.getElementById('firstWk').value=S.firstWk||'A';
+ renderTT();
+ document.getElementById('grace').value=S.grace||0;
+ document.getElementById('friEnd').value=S.set.friEnd||'';
+ document.getElementById('b1a').value=S.set.b1[0];document.getElementById('b1b').value=S.set.b1[1];
+ document.getElementById('b2a').value=S.set.b2[0];document.getElementById('b2b').value=S.set.b2[1];
+ document.getElementById('pin').value='';
+ document.getElementById('pinHint').textContent='A password is set. Type a new one (4+ characters) and press Enter to change it.';
+ S.wk=S.wk&&S.wk<=S.dur?S.wk:curWeek();
+ applyMode();showWeek();
+}
+function showWeek(){
+ var w=W(),n=+S.dur||1,h='';
+ var tm=teacherMode();
+ if(n>1)for(var i=1;i<=n;i++){
+  var op=wkOpen(i),lbl='Week '+i+' · '+short(weekStart(i));
+  if(tm){h+='<button class="wk'+(i===w?' on':'')+(op?'':' off')+'" data-wk="'+i+'"'+(op?'':' disabled')+'>'+lbl+(op?'':' 🔒')+'</button>';}
+  else{h+='<span class="wkgrp"><button class="wk'+(i===w?' on':'')+'" data-wk="'+i+'">'+lbl+'</button><button class="vis '+(op?'open':'shut')+'" data-vis="'+i+'" title="Tap to '+(op?'close':'open')+' this week for teachers">'+(op?'Open':'Closed')+'</button></span>';}
+ }
+ document.getElementById('weeks').innerHTML=h;
+ document.getElementById('wkhint').style.display=(!tm)?'':'none';
+ var note=document.getElementById('wknote'),calW=(function(){var t=new Date();t.setHours(0,0,0,0);return Math.floor((t-baseMonday())/(7*864e5))+1;})();
+ if(tm&&!wkOpen(w)){note.style.display='block';note.textContent='This week is not open yet — please ask the Grade Coordinator to open it before filling in lessons.';}
+ else if(tm&&calW>=1&&calW<=n&&!wkOpen(calW)){note.style.display='block';note.textContent='Week '+calW+' has not been opened yet — please ask the Grade Coordinator to open it before filling in this week’s lessons.';}
+ else if(!tm&&!wkOpen(w)){note.style.display='block';note.textContent='Week '+w+' is closed — teachers cannot see or fill it in. Tap “Closed” next to the week to open it.';}
+ else note.style.display='none';
+ DAYS.forEach(function(d,i){
+  var cl=dayClosed(w,i),hol=!!SCHOOL_OFF[dkey(w,i)];
+  var tab=document.querySelector('.tab[data-tab="'+d[0]+'"]');tab.classList.toggle('off',cl);tab.disabled=tm&&(cl||!wkOpen(w));
+  document.querySelector('.panel[data-panel="'+d[0]+'"]').classList.toggle('closed',cl);
+  document.getElementById('cm-'+d[0]).textContent=cl?(tm?'No lessons to record — this day is closed'+(hol?' (school holiday)':'')+'.':'This day is closed to teachers'+(hol?' (SISD calendar: school holiday)':'')+' and is not counted in the weekly total.'):'';
+  var tg=document.querySelector('[data-daytog="'+d[0]+'"]');tg.textContent=cl?'Open this day for teachers':'Close this day (no school)';
+ });
+ if(tm&&S.tab!=='ov'&&dayClosed(w,dayIdx(S.tab))){showTab(todayTab());}
+ DAYS.forEach(function(d,i){document.getElementById('dh-'+d[0]).textContent=d[1]+' '+fmtDate(dayDate(w,i)).replace(/^\w+, /,'')+(n>1?' · Week '+w+' of '+n:'')+(wkType(w)?' · Timetable week '+wkType(w):'');});
+ document.getElementById('ovh').textContent='Week overview'+(n>1?' — Week '+w+' of '+n:'');
+ document.getElementById('revTitle').textContent='GLC Lesson Review'+(n>1?' — Week '+w+' of '+n:'');
+ document.getElementById('coTitle').textContent='Grade Coordinator review'+(n>1?' — Week '+w:'');
+ document.querySelectorAll('.pcard').forEach(function(c){
+  var v=cell('w'+w+'-'+c.dataset.k);
+  c.querySelectorAll('[data-f]').forEach(function(el){if(el.type==='checkbox')el.checked=!!v[el.dataset.f];else el.value=v[el.dataset.f]||'';});
+  var ed=canEdit(w,dayIdx(c.dataset.k.split('-')[0]));c.querySelectorAll('input,button').forEach(function(el){el.disabled=!ed;});
+  refreshCard(c.dataset.k);
+ });
+ var r=rev(w);document.querySelectorAll('[data-r]').forEach(function(el){el.value=r[el.dataset.r]||'';});
+ refreshAll();
+}
+
+function lateInfo(w,k){
+ var v=cell('w'+w+'-'+k),p=k.split('-')[1],st=mins(S.times[p]),a=mins(v.arr);
+ if(a===null)return null;
+ if(st===null)return {late:false,txt:''};
+ var diff=a-st;
+ return diff>(+S.grace||0)?{late:true,txt:'Late +'+diff+' min'}:{late:false,txt:'On time'};
+}
+function toiletMins(v){var o=mins(v.out),b=mins(v.back);return (v.toilet&&o!==null&&b!==null&&b>=o)?b-o:null;}
+
+function refreshCard(k){
+ var w=W(),c=document.querySelector('.pcard[data-k="'+k+'"]'),v=cell('w'+w+'-'+k);
+ c.querySelectorAll('.tb').forEach(function(b){b.classList.toggle('on',v.t[+b.dataset.t]===+b.dataset.v);});
+ var met=v.t.filter(function(x){return x===1}).length,no=v.t.filter(function(x){return x===-1}).length;
+ var chip=document.getElementById('chip-'+k);
+ chip.className='chip';
+ if(met+no===0){chip.textContent='Not marked';}
+ else{chip.textContent=met+'/3 met';chip.classList.add(no?'no':'ok');}
+ c.classList.toggle('all',met===3);c.classList.toggle('miss',no>0);
+ var kp=k.split('-'),tn=teacherFor(w,kp[0],kp[1]),sj=subjFor(w,kp[0],kp[1]),pn=kp[1];document.getElementById('tn-'+k).textContent=tn?' · '+tn:'';var tt2=(S.times[pn]&&S.ends[pn])?S.times[pn]+'–'+S.ends[pn]:'';document.getElementById('pt-'+k).textContent=[sj,tt2].filter(Boolean).join(' · ');
+ var li=lateInfo(w,k),le=document.getElementById('late-'+k);
+ le.innerHTML=li&&li.txt?'<span class="tag '+(li.late?'late':'ok')+'">'+li.txt+'</span>':'';
+ document.getElementById('tdet-'+k).classList.toggle('on',!!v.toilet);
+ var tmn=toiletMins(v),de=document.getElementById('dur-'+k);
+ de.innerHTML=tmn!==null?'<span class="tag info">'+tmn+' min out</span>':'';
+}
+
+/* ---------- calculations ---------- */
+function calc(w){
+ var r={met:0,no:0,per:[0,0,0],full:0,late:0,toil:0,tmins:0,marked:0,dayMet:{},cells:{},total:0,closed:{}};
+ DAYS.forEach(function(d,di){var cl=dayClosed(w,di);r.closed[d[0]]=cl;if(!cl)r.total+=d[2];for(var p=0;p<=d[2];p++){
+  var k=d[0]+'-'+p,v=cell('w'+w+'-'+k),m=0,n=0;
+  v.t.forEach(function(x){if(x===1)m++;if(x===-1)n++;});
+  if(cl){r.cells[k]={m:0,n:0,late:false,toilet:false,tm:null,closed:true};continue;}
+  if(p>0){v.t.forEach(function(x,i){if(x===1)r.per[i]++;});r.met+=m;r.no+=n;if(m===3)r.full++;if(m+n>0)r.marked++;r.dayMet[d[0]]=(r.dayMet[d[0]]||0)+m;}
+  var li=lateInfo(w,k);if(li&&li.late)r.late++;
+  var tm=toiletMins(v);if(v.toilet){r.toil++;if(tm)r.tmins+=tm;}
+  r.cells[k]={m:m,n:n,late:!!(li&&li.late),toilet:!!v.toilet,tm:tm};
+ }});
+ r.target=r.total===TOTAL?TARGET:Math.round(TARGET*r.total/TOTAL);   /* target scaled down when days are closed */
+ r.pct=r.total?Math.round(r.met/(r.total*3)*100):0;
+ r.ok=r.total>0&&r.full>=r.target;
+ return r;
+}
+function blocks(){return [S.set.b1,S.set.b2].map(function(b){var a=+b[0]||1,z=+b[1]||a;return [Math.min(a,z),Math.max(a,z)];});}
+function toiletFlags(w,day){
+ var d=DAYS.filter(function(x){return x[0]===day})[0],out=[];
+ blocks().forEach(function(b,bi){
+  var ps=[];for(var p=b[0];p<=Math.min(b[1],d[2]);p++){if(cell(ck(w,day,p)).toilet)ps.push(p);}
+  if(ps.length>1)out.push({block:bi+1,range:b,periods:ps});
+ });
+ return out;
+}
+function unfilled(w,i){
+ var d=DAYS[i],out=[];
+ for(var p=1;p<=d[2];p++){
+  var v=cell(ck(w,d[0],p)),marked=v.t.filter(function(x){return x!==0}).length;
+  var why=marked===0?'nothing filled in':(marked<3?'only '+marked+' of 3 targets marked':(!v.init?'no initials':''));
+  if(why)out.push({p:p,teacher:teacherFor(w,d[0],p),why:why});
+ }
+ return out;
+}
+
+function refreshAll(){
+ var w=W(),r=calc(w);
+ var ov='<tr><th>Period</th>'+DAYS.map(function(d){return '<th>'+d[1]+'</th>'}).join('')+'</tr>';
+ for(var p=0;p<=7;p++){
+  ov+='<tr><td class="p">'+(p?'P'+p:'HR')+'</td>';
+  DAYS.forEach(function(d){
+   if(p>d[2]){ov+='<td class="na">—</td>';return;}
+   var c=r.cells[d[0]+'-'+p];if(c.closed){ov+='<td class="na">Closed</td>';return;}var cls=c.m===3?'c3':(c.n>0?'cx':'');
+   ov+='<td class="'+cls+'">'+(c.m+c.n?c.m+'/3':'')+(c.late?' ⏰':'')+(c.toilet?' 🚻'+(c.tm!==null?c.tm+'m':''):'')+'</td>';
+  });
+  ov+='</tr>';
+ }
+ document.getElementById('ovt').innerHTML=ov;
+ DAYS.forEach(function(d){
+  document.getElementById('mini-'+d[0]).textContent=r.closed[d[0]]?'closed':(r.dayMet[d[0]]||0)+'/'+(d[2]*3);
+  var f=toiletFlags(w,d[0]),al=document.getElementById('alert-'+d[0]);
+  al.classList.toggle('on',f.length>0);
+  al.textContent=f.length?'🚻 Frequent toilet visits: '+f.map(function(x){return 'periods '+x.periods.join(', ')}).join(' · ')+' — please let the Grade Coordinator know.':'';
+ });
+ document.getElementById('stats').innerHTML=
+  st(r.total,'Total lessons')+st(r.marked,'Lessons marked')+st(r.full+'/'+r.total,'Lessons all 3 met',r.ok?'good':'bad')+st(r.met,'Targets met','good')+st(r.no,'Targets not met','bad')+
+  st(r.pct+'%','Percentage (of '+r.total*3+')')+st(r.late,'Late arrivals',r.late?'bad':'')+st(r.toil+(r.toil?' · '+r.tmins+'m':''),'Toilet visits · mins out');
+ document.getElementById('bars').innerHTML='<b style="color:var(--navy)">Target percentages</b>'+r.per.map(function(c,i){var x=r.total?Math.round(c/r.total*100):0;return '<div class="bar"><span class="bn">'+(i+1)+'. '+TFULL[i]+'</span><span class="bt"><span class="bf" style="width:'+x+'%"></span></span><span class="bp">'+x+'%</span></div>';}).join('');
+ var ex=document.getElementById('expect');
+ ex.className='expect '+(r.ok?'ok':'no');
+ ex.textContent=(r.ok?'TARGET MET':'TARGET NOT MET')+' — '+r.full+' of '+r.total+' lessons with all 3 targets met (target: '+r.target+' or more'+(r.total<TOTAL?', adjusted for closed days':'')+')';
+ document.getElementById('suggest').innerHTML='Suggested from the card: <b class="'+(r.ok?'ok':'no')+'">'+(r.ok?'Target met':'Target not met')+'</b> ('+r.full+'/'+r.total+' lessons)';
+ mailStatus();
+}
+function st(n,l,c){return '<div class="stat '+(c||'')+'"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>';}
+
+function showTab(t){
+ if(!t||(t==='ov'&&teacherMode()))t=todayTab();
+ S.tab=t;
+ document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('on',b.dataset.tab===t);});
+ document.querySelectorAll('.panel').forEach(function(p){p.classList.toggle('on',p.dataset.panel===t);});
+}
+
+/* ---------- snapshot image ---------- */
+function snapshot(w){
+ var r=calc(w),Wd=1400,H=1132,c=document.createElement('canvas');c.width=Wd;c.height=H;
+ var x=c.getContext('2d'),n=+S.dur||1,rv=rev(w);
+ function T(t,X,Y,f,col,al){x.font=f||'16px Arial';x.fillStyle=col||'#1d2433';x.textAlign=al||'left';x.fillText(t,X,Y);}
+ function R(X,Y,ww,h,col,rad){x.fillStyle=col;x.beginPath();if(x.roundRect)x.roundRect(X,Y,ww,h,rad||0);else x.rect(X,Y,ww,h);x.fill();}
+ R(0,0,Wd,H,'#f4f6fa');R(20,20,Wd-40,130,'#fff',12);R(20,20,Wd-40,6,'#DC2B3E');
+ x.lineWidth=5;[[70,78,'#DC2B3E'],[92,64,'#DC2B3E'],[114,78,'#DC2B3E'],[92,104,'#8a8f99']].forEach(function(o){x.strokeStyle=o[2];x.beginPath();x.arc(o[0],o[1],18,0,7);x.stroke();});
+ T('Secondary Progress Monitoring — Weekly Review'+(n>1?' (Week '+w+' of '+n+')':''),150,68,'bold 28px Arial','#8E1B2E');
+ T('Name: '+(S.info.name||'—')+'     Class: '+(S.info.cls||'—')+'     Week commencing: '+fmtDate(weekStart(w))+'     Issued by: '+(S.info.by||'—'),150,104,'17px Arial','#1B2D4E');
+ T('Snapshot taken '+fmtDate(new Date())+' at '+nowStr(),150,132,'14px Arial','#6b7280');
+ var tx=20,ty=170,cw=[110,244,244,244,244,244];
+ R(tx,ty,Wd-40,522,'#fff',12);
+ var gx=tx+20,gy=ty+20,rh=52;
+ var heads=['Period'].concat(DAYS.map(function(d){return d[1]}));
+ var cx=gx;heads.forEach(function(h,i){R(cx,gy,cw[i]-4,40,'#1B2D4E',4);T(h,cx+cw[i]/2-2,gy+26,'bold 16px Arial','#fff','center');cx+=cw[i];});
+ for(var p=0;p<=7;p++){
+  var yy=gy+44+p*rh;cx=gx;
+  R(cx,yy,cw[0]-4,rh-4,'#faf3f4',4);T(p?'P'+p:'HR',cx+cw[0]/2-2,yy+31,'bold 17px Arial','#8E1B2E','center');cx+=cw[0];
+  DAYS.forEach(function(d,i){
+   var ww=cw[i+1]-4;
+   if(p>d[2]){R(cx,yy,ww,rh-4,'#eceef2',4);T('—',cx+ww/2,yy+31,'16px Arial','#9aa1ad','center');cx+=cw[i+1];return;}
+   var cc=r.cells[d[0]+'-'+p];
+   if(cc.closed){R(cx,yy,ww,rh-4,'#eceef2',4);T('Closed',cx+ww/2,yy+31,'15px Arial','#9aa1ad','center');cx+=cw[i+1];return;}
+   R(cx,yy,ww,rh-4,cc.m===3?'#e3f5ea':(cc.n>0?'#fde6e8':'#f5f7fb'),4);
+   var txt=(cc.m+cc.n?cc.m+'/3 met':'Not marked')+(cc.late?'  · Late':'')+(cc.toilet?'  · Toilet'+(cc.tm!==null?' '+cc.tm+'m':''):'');
+   T(txt,cx+ww/2,yy+31,(cc.m+cc.n?'bold ':'')+'15px Arial',cc.m===3?'#1f8a4c':(cc.n>0?'#c62836':'#9aa1ad'),'center');
+   cx+=cw[i+1];
+  });
+ }
+ var sy=712;R(20,sy,Wd-40,150,'#fff',12);
+ var sts=[[r.full+'/'+r.total,'Lessons all 3 met',r.ok?'#1f8a4c':'#c62836'],[r.marked+'/'+r.total,'Lessons marked','#1B2D4E'],[r.pct+'%','Targets met %','#1B2D4E'],[String(r.late),'Late arrivals',r.late?'#c62836':'#1B2D4E'],[r.toil+(r.toil?' ('+r.tmins+'m)':''),'Toilet visits','#1B2D4E']];
+ sts.forEach(function(s,i){var bx=40+i*268;R(bx,sy+18,250,78,'#f5f7fb',10);T(s[0],bx+125,sy+60,'bold 30px Arial',s[2],'center');T(s[1].toUpperCase(),bx+125,sy+84,'12px Arial','#6b7280','center');});
+ var tt3=r.total||1;T('Ready '+Math.round(r.per[0]/tt3*100)+'%     Responsible '+Math.round(r.per[1]/tt3*100)+'%     Respectful '+Math.round(r.per[2]/tt3*100)+'%',Wd/2,sy+130,'bold 17px Arial','#1B2D4E','center');
+ var oy=882;R(20,oy,Wd-40,60,r.ok?'#e3f5ea':'#fde6e8',12);
+ T((r.ok?'TARGET MET':'TARGET NOT MET')+' — '+r.full+' of '+r.total+' lessons with all 3 targets met (target: '+r.target+' or more)',Wd/2,oy+38,'bold 20px Arial',r.ok?'#1f8a4c':'#c62836','center');
+ var cy=962;R(20,cy,Wd-40,150,'#fff',12);
+ T('Grade Coordinator review',40,cy+32,'bold 18px Arial','#8E1B2E');
+ T('Outcome: '+(rv.decision||'Not yet selected')+'     Reviewed by: '+(rv.by||'—')+'     Date: '+(rv.date||'—'),40,cy+62,'16px Arial','#1B2D4E');
+ var words=('Comment: '+(rv.comment||'—')).split(/\s+/),line='',ly=cy+92;x.font='15px Arial';
+ words.forEach(function(wd){var t=line?line+' '+wd:wd;if(x.measureText(t).width>Wd-80&&line){T(line,40,ly,'15px Arial');line=wd;ly+=22;}else line=t;});
+ if(ly<cy+140)T(line,40,ly,'15px Arial');
+ return c;
+}
+function snapBlob(w,cb){snapshot(w).toBlob(cb,'image/png');}
+function fname(w){return 'Progress_Card_'+(S.info.name||'student').replace(/[^a-z0-9]+/gi,'_')+'_'+ymd(weekStart(w));}
+function download(blob,name){var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},800);}
+
+/* ---------- needs attention (on-screen only, nothing is sent) ---------- */
+function lessonGap(w,i,p){
+ var v=cell(ck(w,DAYS[i][0],p)),marked=v.t.filter(function(x){return x!==0}).length;
+ return marked===0?'nothing filled in':(marked<3?'only '+marked+' of 3 targets marked':(!v.init?'no initials':''));
+}
+function firstName(){return (S.info.name||'the student').trim().split(/\s+/)[0];}
+function anyDataBefore(w,i){
+ for(var ww=1;ww<=w;ww++)for(var j=0;j<DAYS.length;j++){if(ww===w&&j>i)break;for(var p=0;p<=DAYS[j][2];p++){var v=S.cells[ck(ww,DAYS[j][0],p)];if(v&&(v.t.some(function(x){return x!==0})||v.init||v.arr))return true;}}
+ return false;
+}
+function overdue(w){
+ var now=new Date(),out=[];
+ DAYS.forEach(function(d,i){
+  if(dayClosed(w,i)||!wkOpen(w))return;
+  for(var p=0;p<=d[2];p++){
+   var end=lessonEnd(w,i,p)||dayEndTime(w,i);
+   if(now<new Date(end.getTime()+REMIND_MIN*60000))continue;
+   var why=lessonGap(w,i,p);if(!why)continue;
+   if(!anyDataBefore(w,i))continue;
+   out.push({w:w,i:i,p:p,why:why,teacher:teacherFor(w,d[0],p),subj:subjFor(w,d[0],p)});
+  }
+ });
+ return out;
+}
+function reminderText(t,list){
+ var fn=firstName();
+ var lines=list.map(function(u){return '• '+DAYS[u.i][1]+' '+short(dayDate(u.w,u.i))+' — '+(u.p?'Period '+u.p:'Homeroom')+(u.subj?' ('+u.subj+')':'')+' — '+u.why;}).join('\n');
+ return {subject:fn+"'s monitoring card — please complete",
+  body:'Dear '+(t||'colleague')+',\n\nThank you for all your support with '+fn+' on the monitoring card. I\'d appreciate it if you could quickly complete the card for the lesson'+(list.length>1?'s':'')+' below, using the link I shared with you earlier, so that I can support '+fn+' with the three targets.\n\n'+lines+'\n\nIf there are any concerns, please speak to me.\n\nRegards,\n'+SIGN};
+}
+var ATT={};
+function refreshAttention(){
+ var el=document.getElementById('attn');if(!el)return;
+ var w=W(),list=overdue(w),groups={},order=[];
+ list.forEach(function(u){var t=u.teacher||'';if(!groups[t]){groups[t]=[];order.push(t);}groups[t].push(u);});
+ var h='',tf=[];
+ DAYS.forEach(function(d,i){if(dayClosed(w,i))return;toiletFlags(w,d[0]).forEach(function(f){tf.push(d[1]+' '+short(dayDate(w,i))+': '+f.periods.length+' toilet visits in '+f.periods.map(PL).join(', '));});});
+ ATT={};
+ if(!order.length&&!tf.length){h='<p class="okmsg">✓ Nothing needs chasing — every finished lesson this week is filled in.</p>';}
+ order.forEach(function(t,ix){
+  var m=reminderText(t,groups[t]),em=(S.temail[t]||'').trim();ATT[ix]=m;
+  h+='<div class="att"><div class="atth"><b>'+esc(t||'Teacher not on timetable')+'</b> · '+groups[t].length+' lesson'+(groups[t].length>1?'s':'')+'</div><ul>'+
+   groups[t].map(function(u){return '<li>'+DAYS[u.i][1]+' '+short(dayDate(u.w,u.i))+' — '+(u.p?'P'+u.p:'Homeroom')+(u.subj?' '+esc(u.subj):'')+' — <span class="why">'+u.why+'</span></li>';}).join('')+'</ul>'+
+   '<div class="actions" style="margin-top:6px">'+(em?'<a class="btn" href="mailto:'+encodeURIComponent(em)+'?subject='+encodeURIComponent(m.subject)+'&body='+encodeURIComponent(m.body)+'">✉ Email '+esc(t)+'</a>':'')+
+   '<button class="btn ghost" data-copy="'+ix+'">Copy reminder message</button></div></div>';
+ });
+ if(tf.length)h+='<div class="att toil-att"><div class="atth"><b>🚻 Frequent toilet visits</b></div><ul>'+tf.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></div>';
+ el.innerHTML=h;
+}
+function mailStatus(){refreshAttention();}
+
+/* ---------- create teacher card ---------- */
+function createTeacherCard(){
+ if(!S.info.name||!S.info.week){alert('Please fill in at least the student name and week commencing first.');return;}
+ writeNow();
+ var data={active:1,enabled:S.enabled,dayOff:S.dayOff,pinV:S.pinV,info:S.info,dur:S.dur,times:S.times,ends:S.ends,grace:S.grace,set:S.set,tt:S.tt,subj:S.subj,temail:S.temail,ttMode:S.ttMode,firstWk:S.firstWk,pin:S.pin};
+ var preset={id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),data:data};
+ var json=JSON.stringify(preset).replace(/</g,'\\u003c');
+ var marker='/*@@PRE'+'SET@@*/';
+ var html=SOURCE.replace(marker+'null',marker+json);
+ if(html===SOURCE){alert('Sorry — the teacher card could not be created from this copy.');return;}
+ download(new Blob([html],{type:'text/html'}),'Progress_Card_'+(S.info.name||'student').replace(/[^a-z0-9]+/gi,'_')+'_TEACHER.html');
+}
+
+/* ---------- events ---------- */
+var chkTimer;
+document.addEventListener('input',handle);document.addEventListener('change',handle);
+function handle(e){
+ var el=e.target,w=W();
+ if(el.dataset.i!==undefined){if(teacherMode())return;S.info[el.dataset.i]=el.value;if(el.dataset.i==='week'){S.wk=curWeek();showWeek();}mailStatus();}
+ else if(el.id==='dur'){if(teacherMode())return;S.dur=+el.value||1;if(S.active>S.dur)S.active=S.dur;if(S.wk>S.dur)S.wk=S.dur;Object.keys(S.enabled).forEach(function(k){if(+k>S.dur)delete S.enabled[k];});if(!openWeeks().length)S.enabled[1]=true;showWeek();}
+ else if(el.id==='pin'){if(e.type!=='change')return;var v=el.value.trim();if(v.length<4){alert('The password must be at least 4 characters.');return;}S.pin=hash(v);S.pinV=PW_VER;el.value='';document.getElementById('pinHint').textContent='Password changed ✓ — teacher cards you create from now on will use it.';}
+ else if(el.dataset.r!==undefined){rev(w)[el.dataset.r]=el.value;}
+ else if(el.dataset.tt){S.tt[el.dataset.tt]=el.value;if(e.type==='change')renderEmails();document.querySelectorAll('.pcard').forEach(function(c){refreshCard(c.dataset.k)});}
+ else if(el.dataset.em){S.temail[el.dataset.em]=el.value.trim();mailStatus();}
+ else if(el.dataset.end){S.ends[el.dataset.end]=el.value;}
+ else if(el.id==='ttMode'){S.ttMode=el.value;renderTT();showWeek();}
+ else if(el.id==='firstWk'){S.firstWk=el.value;showWeek();}
+ else if(el.dataset.time){S.times[el.dataset.time]=el.value;showWeek();}
+ else if(el.id==='grace'){S.grace=+el.value||0;showWeek();}
+ else if(el.id==='friEnd'){S.set.friEnd=el.value;mailStatus();}
+ else if(/^b[12][ab]$/.test(el.id)){var b=el.id[1]==='1'?'b1':'b2';S.set[b][el.id[2]==='a'?0:1]=+el.value||1;refreshAll();}
+ else if(el.dataset.f){var k=el.closest('.pcard').dataset.k;if(!canEdit(w,dayIdx(k.split('-')[0]))){showWeek();return;}var k2=k,v=cell('w'+w+'-'+k);v[el.dataset.f]=el.type==='checkbox'?el.checked:el.value;refreshCard(k);refreshAll();queueChecks();}
+ else return;
+ save();
+}
+function queueChecks(){}
+document.addEventListener('click',function(e){
+ var b=e.target.closest('button');if(!b)return;
+ if(b.dataset.tab){showTab(b.dataset.tab);save();return;}
+ if(b.dataset.copy!==undefined){var m=ATT[b.dataset.copy];var txt=m.body;(navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(function(){b.textContent='Copied ✓';},function(){prompt('Copy this message:',txt);});return;}
+ if(b.dataset.wk){var wn=+b.dataset.wk;if(teacherMode()&&!wkOpen(wn))return;S.wk=wn;showWeek();save();return;}
+ if(b.dataset.vis){if(teacherMode())return;var a=+b.dataset.vis;S.enabled[a]=!S.enabled[a];if(!openWeeks().length){S.enabled[a]=true;alert('At least one week must stay open for teachers.');}S.wk=a;showWeek();save();return;}
+ if(b.dataset.daytog){if(teacherMode())return;var di=dayIdx(b.dataset.daytog),k=dkey(W(),di),now=dayClosed(W(),di);S.dayOff[k]=!now;showWeek();save();return;}
+ var pc=b.closest('.pcard');
+ if(pc&&!canEdit(W(),dayIdx(pc.dataset.k.split('-')[0])))return;
+ if(pc&&b.classList.contains('tb')){var v=cell('w'+W()+'-'+pc.dataset.k),i=+b.dataset.t,val=+b.dataset.v;v.t[i]=v.t[i]===val?0:val;refreshCard(pc.dataset.k);refreshAll();save();queueChecks();return;}
+ if(pc&&b.dataset.now){var f=b.dataset.now,inp=pc.querySelector('[data-f="'+f+'"]');inp.value=nowStr();cell('w'+W()+'-'+pc.dataset.k)[f]=inp.value;refreshCard(pc.dataset.k);refreshAll();save();queueChecks();return;}
+});
+function pwShow(on){var bg=document.getElementById('pwbg'),inp=document.getElementById('pwIn');bg.classList.toggle('on',on);document.getElementById('pwErr').textContent='';inp.value='';if(on)setTimeout(function(){inp.focus();},30);}
+function pwTry(){var v=document.getElementById('pwIn').value;
+ if(hash(v)===S.pin){glc=true;ssSet('glc_'+KEY,'1');pwShow(false);applyMode();showWeek();window.scrollTo(0,0);}
+ else{document.getElementById('pwErr').textContent='Incorrect password.';document.getElementById('pwIn').select();}}
+document.getElementById('glcLink').onclick=function(){pwShow(true);};
+document.getElementById('pwOk').onclick=pwTry;
+document.getElementById('pwCancel').onclick=function(){pwShow(false);};
+document.getElementById('pwIn').addEventListener('keydown',function(e){if(e.key==='Enter')pwTry();if(e.key==='Escape')pwShow(false);});
+document.getElementById('lockBtn').onclick=function(){glc=false;ssDel('glc_'+KEY);applyMode();window.scrollTo(0,0);};
+document.getElementById('previewBtn').onclick=function(){preview=true;applyMode();window.scrollTo(0,0);};
+document.getElementById('backBtn').onclick=function(){preview=false;applyMode();};
+document.getElementById('createBtn').onclick=createTeacherCard;
+document.getElementById('printBtn').onclick=function(){window.print();};
+document.getElementById('snapBtn').onclick=function(){var w=W();snapBlob(w,function(blob){download(blob,fname(w)+'.png');});};
+document.getElementById('saveBtn').onclick=function(){writeNow();download(new Blob([JSON.stringify(S,null,1)],{type:'application/json'}),fname(1)+'_backup.json');};
+document.getElementById('loadBtn').onclick=function(){document.getElementById('fileIn').click();};
+document.getElementById('fileIn').onchange=function(e){
+ var f=e.target.files[0];if(!f)return;var r=new FileReader();
+ r.onload=function(){try{load(JSON.parse(r.result));hydrate();save();}catch(err){alert('That file could not be read as a progress card backup.');}};
+ r.readAsText(f);e.target.value='';
+};
+document.getElementById('clearBtn').onclick=function(){
+ if(!confirm('Start a new blank card? Download a backup or save as PDF first if you need this one. Lesson times, timetable, PIN and settings will be kept.'))return;
+ var keep={times:S.times,ends:S.ends,grace:S.grace,set:S.set,tt:S.tt,subj:S.subj,temail:S.temail,ttMode:S.ttMode,firstWk:S.firstWk,pin:S.pin};if(IS_TEACHER_CARD){keep.info=S.info;keep.dur=S.dur;}load(keep);hydrate();save();
+};
+
+if(teacherMode()){S.wk=teacherWeek();S.tab=todayTab();}
+if(!CAN_SAVE)document.getElementById('nosave').classList.add('on');
+build();hydrate();writeNow();
+window.__snap=snapshot;window.__calc=calc;window.__S=function(){return S};
+setInterval(refreshAttention,60000);
+})();
+</script>
+</body>
+</html>
